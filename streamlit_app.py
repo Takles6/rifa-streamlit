@@ -50,12 +50,12 @@ numeros_vendidos = c.fetchone()[0]
 numeros_disponiveis = total_numeros - numeros_vendidos
 
 # Streamlit UI
-st.title("🎟️ Sistema de Rifas Russian Manicure")
+st.title("🎟️ Rifa de páscoa Luize Beauty")
 
 st.subheader(f"🔢 Números Disponíveis: {numeros_disponiveis} / {total_numeros}")
 
 st.subheader("🏆 Prêmios")
-st.write("🎁 **5 Atendimentos de Russian Manicure VIP** (Valor: $600)")
+st.write("🎁 **Deluxe membership - 6 Atendimentos de Russian Manicure** (Valor: $600)")
 
 st.subheader("📜 Regras e Datas do Sorteio")
 st.write("📅 Sorteio será realizado no dia **XX/XX/XXXX** ao vivo no Instagram.")
