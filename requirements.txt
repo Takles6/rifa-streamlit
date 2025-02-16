@@ -1,1 +1,6 @@
 streamlit
+streamlit
+sqlite3
+random
+smtplib
+stripe
