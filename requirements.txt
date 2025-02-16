@@ -1,6 +1,5 @@
 streamlit
 pysqlite3
-random
 smtplib
 stripe
 firebase-admin
