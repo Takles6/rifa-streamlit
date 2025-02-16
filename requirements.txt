@@ -1,6 +1,6 @@
 streamlit
-streamlit
-sqlite3
+pysqlite3
 random
 smtplib
 stripe
+firebase-admin
