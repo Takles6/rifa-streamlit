@@ -23,50 +23,59 @@ c.execute('''CREATE TABLE IF NOT EXISTS numeros_vendidos (
                 numero INTEGER PRIMARY KEY)''')
 conn.commit()
 
-def enviar_email(email, nome, numeros):
-    remetente = "seu_email@gmail.com"
-    senha = "sua_senha"
-    
-    mensagem = f"Olá {nome},\n\nObrigado por participar da nossa rifa! Seus números da sorte são: {numeros}. \n\nBoa sorte!\n\nEquipe Russian Manicure"
-    msg = MIMEText(mensagem)
-    msg["Subject"] = "Confirmação da Rifa"
-    msg["From"] = remetente
-    msg["To"] = email
-    
-    try:
-        server = smtplib.SMTP("smtp.gmail.com", 587)
-        server.starttls()
-        server.login(remetente, senha)
-        server.sendmail(remetente, email, msg.as_string())
-        server.quit()
-        st.success("E-mail de confirmação enviado!")
-    except Exception as e:
-        st.error(f"Erro ao enviar e-mail: {e}")
+# Seleção de idioma
+language = st.sidebar.selectbox("Select Language / Selecionar Idioma", ["English", "Português"])
 
-# Contador de números vendidos e disponíveis
-total_numeros = 200
-c.execute("SELECT COUNT(*) FROM numeros_vendidos")
-numeros_vendidos = c.fetchone()[0]
-numeros_disponiveis = total_numeros - numeros_vendidos
+if language == "English":
+    title = "🎟️ Easter Raffle - Luize Beauty"
+    numbers_available = "🔢 Numbers Available"
+    prize_section = "🏆 Prizes"
+    prize_info = "🎁 **Deluxe membership - 6 Russian Manicure Sessions** (Value: $600)"
+    rules_section = "📜 Rules & Draw Date"
+    draw_info = "📅 The draw will take place on **XX/XX/XXXX** live on Instagram."
+    confirmation_info = "📩 Only paid numbers will be confirmed in the draw."
+    name_label = "Name"
+    email_label = "E-mail"
+    phone_label = "Phone"
+    select_package = "Choose your package"
+    reserve_button = "Reserve Numbers"
+    payment_section = "💳 Payment"
+    payment_method = "Choose payment method"
+    confirm_payment = "Confirm Payment"
+    confirmed_clients = "📜 Confirmed Clients"
+else:
+    title = "🎟️ Rifa de Páscoa - Luize Beauty"
+    numbers_available = "🔢 Números Disponíveis"
+    prize_section = "🏆 Prêmios"
+    prize_info = "🎁 **Deluxe membership - 6 Atendimentos de Russian Manicure** (Valor: $600)"
+    rules_section = "📜 Regras e Datas do Sorteio"
+    draw_info = "📅 Sorteio será realizado no dia **XX/XX/XXXX** ao vivo no Instagram."
+    confirmation_info = "📩 Apenas números pagos serão confirmados no sorteio."
+    name_label = "Nome"
+    email_label = "E-mail"
+    phone_label = "Telefone"
+    select_package = "Escolha seu pacote"
+    reserve_button = "Reservar Números"
+    payment_section = "💳 Pagamento"
+    payment_method = "Escolha o método de pagamento"
+    confirm_payment = "Confirmar Pagamento"
+    confirmed_clients = "📜 Clientes Confirmados"
 
-# Streamlit UI
-st.title("🎟️ Rifa de páscoa Luize Beauty")
+st.title(title)
 
-st.subheader(f"🔢 Números Disponíveis: {numeros_disponiveis} / {total_numeros}")
+st.subheader(f"{numbers_available}: {total_numeros - numeros_vendidos} / {total_numeros}")
 
-st.subheader("🏆 Prêmios")
-st.write("🎁 **Deluxe membership - 6 Atendimentos de Russian Manicure** (Valor: $600)")
+st.subheader(prize_section)
+st.write(prize_info)
 
-st.subheader("📜 Regras e Datas do Sorteio")
-st.write("📅 Sorteio será realizado no dia **XX/XX/XXXX** ao vivo no Instagram.")
-st.write("✅ O número sorteado será escolhido aleatoriamente e publicado em nossas redes sociais.")
-st.write("📩 Apenas números pagos serão confirmados no sorteio.")
+st.subheader(rules_section)
+st.write(draw_info)
+st.write(confirmation_info)
 
-nome = st.text_input("Nome")
-email = st.text_input("E-mail")
-telefone = st.text_input("Telefone")
+nome = st.text_input(name_label)
+email = st.text_input(email_label)
+telefone = st.text_input(phone_label)
 
-# Pacotes fechados de números
 pacotes = {
     "1 Número - $10": 1,
     "5 Números - $47": 5,
@@ -75,47 +84,43 @@ pacotes = {
     "50 Números - $375": 50,
 }
 
-pacote_escolhido = st.selectbox("Escolha seu pacote", list(pacotes.keys()))
+pacote_escolhido = st.selectbox(select_package, list(pacotes.keys()))
 
-if st.button("Reservar Números"):
+if st.button(reserve_button):
     if nome and email and telefone:
         numeros_sorteados = random.sample(set(range(1, total_numeros + 1)) - set(c.execute("SELECT numero FROM numeros_vendidos").fetchall()), pacotes[pacote_escolhido])
         numeros_str = ", ".join(map(str, numeros_sorteados))
         
-        # Salvar no banco de dados
         c.execute("INSERT INTO clientes (nome, email, telefone, numeros, pagamento_confirmado) VALUES (?, ?, ?, ?, ?)",
                   (nome, email, telefone, numeros_str, 0))
         for num in numeros_sorteados:
             c.execute("INSERT INTO numeros_vendidos (numero) VALUES (?)", (num,))
         conn.commit()
         
-        st.success(f"Números reservados: {numeros_str}. Faça o pagamento para confirmar.")
+        st.success(f"{numeros_str}. {confirmation_info}")
     else:
-        st.error("Por favor, preencha todos os campos.")
+        st.error("Please fill in all fields." if language == "English" else "Por favor, preencha todos os campos.")
 
-# Área de pagamento
-st.subheader("💳 Pagamento")
-pagamento_metodo = st.selectbox("Escolha o método de pagamento", ["Transferência Bancária", "Cartão de Crédito (Stripe)"])
+st.subheader(payment_section)
+pagamento_metodo = st.selectbox(payment_method, ["Bank Transfer" if language == "English" else "Transferência Bancária", "Credit Card (Stripe)"])
 
-if st.button("Confirmar Pagamento"):
-    if pagamento_metodo == "Transferência Bancária":
-        st.success("Envie o comprovante para validar a reserva.")
+if st.button(confirm_payment):
+    if pagamento_metodo == "Transferência Bancária" or pagamento_metodo == "Bank Transfer":
+        st.success("Send proof of payment to validate the reservation." if language == "English" else "Envie o comprovante para validar a reserva.")
     else:
         try:
             pagamento = stripe.PaymentIntent.create(
-                amount=int(pacotes[pacote_escolhido] * 10 * 100),  # Converter para centavos
+                amount=int(pacotes[pacote_escolhido] * 10 * 100),
                 currency="usd",
                 payment_method_types=["card"],
             )
-            st.success("Pagamento processado com sucesso!")
+            st.success("Payment successfully processed!" if language == "English" else "Pagamento processado com sucesso!")
             c.execute("UPDATE clientes SET pagamento_confirmado = 1 WHERE email = ?", (email,))
             conn.commit()
-            enviar_email(email, nome, numeros_str)
         except Exception as e:
-            st.error(f"Erro no pagamento: {e}")
+            st.error(f"Payment error: {e}" if language == "English" else f"Erro no pagamento: {e}")
 
-# Mostrar lista de clientes pagantes
-st.subheader("📜 Clientes Confirmados")
+st.subheader(confirmed_clients)
 c.execute("SELECT nome, email, numeros FROM clientes WHERE pagamento_confirmado = 1")
 clientes_confirmados = c.fetchall()
 for cliente in clientes_confirmados:
