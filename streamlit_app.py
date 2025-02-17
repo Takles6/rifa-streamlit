@@ -10,7 +10,7 @@ STRIPE_SECRET_KEY = "sua_chave_secreta_do_stripe"
 stripe.api_key = STRIPE_SECRET_KEY
 
 # Conectar ao banco de dados SQLite
-conn = sqlite3.connect("rifa.db")
+conn = sqlite3.connect("rifa.db", check_same_thread=False)
 c = conn.cursor()
 c.execute('''CREATE TABLE IF NOT EXISTS clientes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,6 +22,12 @@ c.execute('''CREATE TABLE IF NOT EXISTS clientes (
 c.execute('''CREATE TABLE IF NOT EXISTS numeros_vendidos (
                 numero INTEGER PRIMARY KEY)''')
 conn.commit()
+
+# Contador de números vendidos e disponíveis
+total_numeros = 200
+c.execute("SELECT COUNT(*) FROM numeros_vendidos")
+numeros_vendidos = c.fetchone()[0]
+numeros_disponiveis = total_numeros - numeros_vendidos
 
 # Seleção de idioma
 language = st.sidebar.selectbox("Select Language / Selecionar Idioma", ["English", "Português"])
@@ -63,7 +69,7 @@ else:
 
 st.title(title)
 
-st.subheader(f"{numbers_available}: {total_numeros - numeros_vendidos} / {total_numeros}")
+st.subheader(f"{numbers_available}: {numeros_disponiveis} / {total_numeros}")
 
 st.subheader(prize_section)
 st.write(prize_info)
@@ -88,7 +94,7 @@ pacote_escolhido = st.selectbox(select_package, list(pacotes.keys()))
 
 if st.button(reserve_button):
     if nome and email and telefone:
-        numeros_sorteados = random.sample(set(range(1, total_numeros + 1)) - set(c.execute("SELECT numero FROM numeros_vendidos").fetchall()), pacotes[pacote_escolhido])
+        numeros_sorteados = random.sample(set(range(1, total_numeros + 1)) - set(x[0] for x in c.execute("SELECT numero FROM numeros_vendidos").fetchall()), pacotes[pacote_escolhido])
         numeros_str = ", ".join(map(str, numeros_sorteados))
         
         c.execute("INSERT INTO clientes (nome, email, telefone, numeros, pagamento_confirmado) VALUES (?, ?, ?, ?, ?)",
